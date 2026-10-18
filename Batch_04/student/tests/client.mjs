@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+const source=ts.transpileModule(fs.readFileSync('lib/client-request.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+const {requestJson,createDashboardLoader}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+let reads=0,resolve;const accepted=[],errors=[];
+const loader=createDashboardLoader(()=>{reads++;return new Promise(r=>resolve=r)},v=>accepted.push(v),e=>errors.push(e));
+const first=loader.load(),second=loader.load();assert.equal(first,second);await Promise.resolve();assert.equal(reads,1);resolve('student A');assert.equal(await first,true);assert.deepEqual(accepted,['student A']);
+const stale=loader.load();await Promise.resolve();const oldResolve=resolve;loader.invalidate();const current=loader.load();await Promise.resolve();oldResolve('old signed-out account');assert.equal(await stale,false);resolve('new account');assert.equal(await current,true);assert.deepEqual(accepted,['student A','new account']);
+let failures=0;const failing=createDashboardLoader(()=>{failures++;throw Error('Disconnected')},()=>assert.fail(),e=>errors.push(e));assert.equal(await failing.load(),false);assert.equal(await failing.load(),false);assert.equal(failures,2);
+const originalFetch=globalThis.fetch;globalThis.fetch=async(_url,options)=>{assert.equal(options.cache,'no-store');return Response.json({error:'Expired'},{status:401})};await assert.rejects(requestJson('/test'),e=>e.status===401&&e.message==='Expired');
+globalThis.fetch=async()=>new Response('<html>Unavailable</html>',{status:503});await assert.rejects(requestJson('/test'),e=>e.status===503&&e.message.includes('unexpected response'));
+const originalTimer=globalThis.setTimeout;globalThis.setTimeout=(fn)=>{queueMicrotask(fn);return 0};globalThis.fetch=async(_url,{signal})=>new Promise((_,reject)=>signal.addEventListener('abort',()=>reject(new DOMException('Aborted','AbortError'))));await assert.rejects(requestJson('/test'),/request timed out/);globalThis.setTimeout=originalTimer;
+globalThis.fetch=originalFetch;
+console.log('PASS: dashboard request deduplication, logout/account-switch stale response rejection, retry after synchronous failures, fresh reads and useful HTTP/non-JSON errors');

@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
+const db=new DatabaseSync(':memory:');const files=fs.readdirSync('drizzle').filter(f=>f.endsWith('.sql')).sort();
+db.exec(fs.readFileSync('drizzle/'+files[0],'utf8'));db.prepare('INSERT INTO attempts(id,user,day,question_ids) VALUES(?,?,?,?)').run('legacy','student','2026-10-11','[]');
+for(const file of files.slice(1))db.exec(fs.readFileSync('drizzle/'+file,'utf8'));
+assert.equal(db.prepare('SELECT subject FROM attempts WHERE id=?').get('legacy').subject,'Mixed');
+db.prepare('INSERT INTO attempts(id,user,day,subject,question_ids) VALUES(?,?,?,?,?)').run('new','student','2026-10-11','DSA','[]');
+assert.throws(()=>db.prepare('INSERT INTO attempts(id,user,day,subject,question_ids) VALUES(?,?,?,?,?)').run('duplicate','student','2026-10-11','DSA','[]'));
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM attempts').get().n,2);
+console.log('PASS: migration preserves mixed quiz history and enforces one daily attempt per student and subject');
