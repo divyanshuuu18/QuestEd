@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+let code=ts.transpileModule(fs.readFileSync('app/components/DailyChallengeEditor.tsx','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+for(const specifier of ['react','react/jsx-runtime','lucide-react'])code=code.replaceAll('"'+specifier+'"','"'+import.meta.resolve(specifier)+'"').replaceAll("'"+specifier+"'","'"+import.meta.resolve(specifier)+"'");
+const {default:Editor,indiaDay}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+const subjects=['DSA','Web Development','English and Communication Skills','Maths','Chemistry','Constitutional Design'];
+const props={subject:'DSA',allSubjects:false,subjects,busy:false,onPublish:()=>{throw Error('Rendering must not publish')}};
+const teacher=renderToStaticMarkup(React.createElement(Editor,props));assert.ok(teacher.includes('Publish daily challenge'));assert.ok(teacher.includes('value="DSA"'));assert.match(teacher,/readonly/i);assert.ok(teacher.includes('min="'+indiaDay()+'"'));assert.equal((teacher.match(/<option/g)||[]).length,4);assert.ok(teacher.includes('Answer explanation'));
+const allSubjects=renderToStaticMarkup(React.createElement(Editor,{...props,subject:'All subjects',allSubjects:true}));assert.equal((allSubjects.match(/<option/g)||[]).length,10);
+const busy=renderToStaticMarkup(React.createElement(Editor,{...props,busy:true}));assert.ok(busy.includes('disabled'));assert.ok(busy.includes('Publishing…'));
+console.log('PASS: faculty daily-challenge form subject permissions, India date, answer fields and publishing state');

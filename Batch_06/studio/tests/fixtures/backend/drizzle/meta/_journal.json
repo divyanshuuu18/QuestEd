@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791604419587,
+      "tag": "0000_wild_master_mold",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791696319411,
+      "tag": "0001_cold_viper",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791699250512,
+      "tag": "0002_groovy_night_nurse",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791702605065,
+      "tag": "0003_soft_stone_men",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791708549653,
+      "tag": "0004_smiling_scarlet_spider",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791801568143,
+      "tag": "0005_burly_puff_adder",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791871352985,
+      "tag": "0006_uneven_chamber",
+      "breakpoints": true
+    }
+  ]
+}
