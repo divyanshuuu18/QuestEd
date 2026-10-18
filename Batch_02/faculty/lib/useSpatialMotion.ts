@@ -1,0 +1,8 @@
+'use client';
+import {useEffect} from 'react';
+export function useSpatialMotion(){useEffect(()=>{
+ const preference=matchMedia('(prefers-reduced-motion: reduce)'),pointer=matchMedia('(hover: hover) and (pointer: fine)');let active:HTMLElement|null=null,frame=0;
+ function reset(){cancelAnimationFrame(frame);if(active){active.style.removeProperty('--tilt-x');active.style.removeProperty('--tilt-y');active.style.removeProperty('--light-x');active.style.removeProperty('--light-y')}active=null}
+ function move(event:PointerEvent){if(preference.matches||!pointer.matches){reset();return}const target=event.target instanceof Element?event.target.closest<HTMLElement>('.stat,.pathCard,.subjectQuizCard,.courseCard'):null;if(target!==active){reset();active=target}if(!target)return;const box=target.getBoundingClientRect(),x=Math.max(0,Math.min(1,(event.clientX-box.left)/box.width)),y=Math.max(0,Math.min(1,(event.clientY-box.top)/box.height));cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{target.style.setProperty('--tilt-x',(3-y*6)+'deg');target.style.setProperty('--tilt-y',(x*6-3)+'deg');target.style.setProperty('--light-x',(x*100)+'%');target.style.setProperty('--light-y',(y*100)+'%')})}
+ document.addEventListener('pointermove',move,{passive:true});document.addEventListener('pointerleave',reset);window.addEventListener('blur',reset);preference.addEventListener('change',reset);return()=>{reset();document.removeEventListener('pointermove',move);document.removeEventListener('pointerleave',reset);window.removeEventListener('blur',reset);preference.removeEventListener('change',reset)}
+},[])}
